@@ -27,7 +27,7 @@ public class ChatServer {
     private Session session;    //与某个客户端的连接会话，需要通过它来给客户端发送数据
     private static List<Integer> list = new ArrayList<>();   //在线列表,记录用户名称
     private ConcurrentHashMap routetab = new ConcurrentHashMap<>();  //用户名和websocket的session绑定的路由表
-    private ThreadLocal<HttpSession> httpSessionThreadLocal = new ThreadLocal<>();
+    private HttpSession httpSession;
     /**
      * 连接建立成功调用的方法
      * @param session  可选的参数。session为与某个客户端的连接会话，需要通过它来给客户端发送数据
@@ -38,7 +38,7 @@ public class ChatServer {
         webSocketSet.add(this);     //加入set中
         addOnlineCount();           //在线数加1;
         HttpSession httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
-        httpSessionThreadLocal.set(httpSession);
+        this.httpSession = httpSession;
         User user = (User) httpSession.getAttribute("user");    //获取当前用户
         list.add(user.getUserId());           //将用户名加入在线列表
         routetab.put(user.getUserId(), session);   //将用户名和session绑定到路由表
@@ -53,8 +53,7 @@ public class ChatServer {
     public void onClose(){
         webSocketSet.remove(this);  //从set中删除
         subOnlineCount();           //在线数减1
-        HttpSession httpSession = httpSessionThreadLocal.get();
-        User user = (User) httpSession.getAttribute("user");    //获取当前用户
+        User user = (User) this.httpSession.getAttribute("user");    //获取当前用户
         list.remove(user.getUserId());        //从在线列表移除这个用户
         routetab.remove(user.getUserId());
         String message = getMessage("[" + user.getUserName() +"]离开了聊天室,当前在线人数为"+getOnlineCount()+"位", "notice", list);
