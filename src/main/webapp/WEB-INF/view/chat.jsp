@@ -207,6 +207,7 @@
      * "list" : {[xx],[xx],[xx]}
      */
     function analysisMessage(message){
+
         message = JSON.parse(message);
         if(message.type == "message"){      //会话消息
             showChat(message.message);
