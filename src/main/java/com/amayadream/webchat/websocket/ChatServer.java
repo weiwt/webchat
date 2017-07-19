@@ -22,12 +22,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @ServerEndpoint(value = "/chatServer", configurator = HttpSessionConfigurator.class)
 public class ChatServer {
-    private AtomicInteger onlineCount = new AtomicInteger(); //静态变量，用来记录当前在线连接数。应该把它设计成线程安全的。
+    private static AtomicInteger onlineCount = new AtomicInteger(); //静态变量，用来记录当前在线连接数。应该把它设计成线程安全的。
     private static CopyOnWriteArraySet<ChatServer> webSocketSet = new CopyOnWriteArraySet<ChatServer>();
     private Session session;    //与某个客户端的连接会话，需要通过它来给客户端发送数据
     private static List<Integer> list = new ArrayList<>();   //在线列表,记录用户名称
-    private ConcurrentHashMap routetab = new ConcurrentHashMap<>();  //用户名和websocket的session绑定的路由表
+    private static ConcurrentHashMap routetab = new ConcurrentHashMap<>();  //用户名和websocket的session绑定的路由表
     private HttpSession httpSession;
+    private User currentUser;
     /**
      * 连接建立成功调用的方法
      * @param session  可选的参数。session为与某个客户端的连接会话，需要通过它来给客户端发送数据
@@ -40,6 +41,7 @@ public class ChatServer {
         HttpSession httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
         this.httpSession = httpSession;
         User user = (User) httpSession.getAttribute("user");    //获取当前用户
+        this.currentUser = user;
         list.add(user.getUserId());           //将用户名加入在线列表
         routetab.put(user.getUserId(), session);   //将用户名和session绑定到路由表
         String message = getMessage("[" + user.getUserName() + "]加入聊天室,当前在线人数为"+getOnlineCount()+"位", "notice",  list);
@@ -53,10 +55,9 @@ public class ChatServer {
     public void onClose(){
         webSocketSet.remove(this);  //从set中删除
         subOnlineCount();           //在线数减1
-        User user = (User) this.httpSession.getAttribute("user");    //获取当前用户
-        list.remove(user.getUserId());        //从在线列表移除这个用户
-        routetab.remove(user.getUserId());
-        String message = getMessage("[" + user.getUserName() +"]离开了聊天室,当前在线人数为"+getOnlineCount()+"位", "notice", list);
+        list.remove(currentUser.getUserId());        //从在线列表移除这个用户
+        routetab.remove(currentUser.getUserId());
+        String message = getMessage("[" + currentUser.getUserName() +"]离开了聊天室,当前在线人数为"+getOnlineCount()+"位", "notice", list);
         broadcast(message);         //广播
     }
 
