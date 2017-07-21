@@ -12,7 +12,7 @@ public interface UserDAO {
     String TABLE_NAME = "ow_user";
     String SELECT_COLUMN = "userId,userName,password,nickName,sex,age,avatarUrl,profile,createTime,lastTime,status,level";
     String INSERT_COLUMN = "userName,password,nickName,sex,age,avatarUrl,profile,createTime,lastTime,status,level";
-    String INSERT_VALUE = "#{entity.userName},#{entity.password},#{entity.nickName},#{entity.sex},#{entity.age},#{entity.avatarUrl},#{entity.profile},NOW(),NOW(),#{entity.status},#{entity.level}";
+    String INSERT_VALUE = "#{entity.userName},#{entity.password},#{entity.nickName},#{entity.sex},#{entity.age},#{entity.avatarUrl},#{entity.profile},NOW(),NOW(),#{entity.status},1";
 
     @Select({"<script>" +
             "select ",SELECT_COLUMN," from ",TABLE_NAME," where userId = #{userId}",

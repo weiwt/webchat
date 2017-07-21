@@ -1,8 +1,11 @@
 package com.amayadream.webchat.controller;
 
+import com.amayadream.webchat.pojo.Group;
 import com.amayadream.webchat.pojo.User;
+import com.amayadream.webchat.service.GroupService;
 import com.amayadream.webchat.service.UserService;
 import com.amayadream.webchat.utils.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,14 +20,18 @@ import javax.servlet.http.HttpSession;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  */
 @Controller
-@SessionAttributes("userid")
 public class UserController {
     @Resource
     private UserService userService;
+
+    @Autowired
+    private GroupService groupService;
 
     /**
      * 聊天主页
@@ -81,7 +88,7 @@ public class UserController {
      * @param user
      * @return
      */
-    @RequestMapping(value = "userinfo/add", method = RequestMethod.POST)
+    @RequestMapping(value = "userinfo/add")
     public String  add(User user,Integer groupId, RedirectAttributes attributes, HttpServletRequest request){
         ResultDTO resultDTO = userService.addUser(user, groupId);
 
@@ -91,7 +98,32 @@ public class UserController {
         }
 
         attributes.addFlashAttribute("message", "["+user.getUserName()+"]资料更新成功!");
-        return "redirect:/userinfo/add";
+        return "redirect:/userinfo/currentUser/config";
+    }
+
+    @RequestMapping(value = "userinfo/addGroup")
+    public String  addGroup(Group group, RedirectAttributes attributes, HttpServletRequest request){
+        ResultDTO resultDTO = groupService.addGroup(group);
+
+        if (resultDTO.isUnSuccess()){
+            attributes.addFlashAttribute("error", "["+group.getGroupName()+"]添加失败,errorMsg:"+resultDTO.getErrorMsg());
+            return "redirect:/userinfo/add";
+        }
+
+        attributes.addFlashAttribute("message", "["+group.getGroupName()+"]资料更新成功!");
+        return "redirect:/userinfo/currentUser/config";
+    }
+
+    @RequestMapping("userinfo/queryAllGroup")
+    @ResponseBody
+    public List<Group> queryAllGroup(){
+        ResultDTO<List<Group>> listResultDTO = groupService.queryAllGroup();
+        List<Group> groups = new ArrayList<>();
+        if (listResultDTO.isSuccess()){
+            groups = listResultDTO.getModel();
+        }
+
+        return groups;
     }
 
     /**
@@ -100,7 +132,7 @@ public class UserController {
      * @param newpass
      * @return
      */
-    @RequestMapping(value = "userinfo/{userid}/pass", method = RequestMethod.POST)
+    @RequestMapping(value = "userinfo/currentUser/pass", method = RequestMethod.POST)
     public String changePassword(String oldpass, String newpass, RedirectAttributes attributes,HttpSession session, HttpServletRequest request){
         User user = (User) session.getAttribute("user");
         if (user == null)
@@ -131,7 +163,7 @@ public class UserController {
             User user = (User) session.getAttribute("user");
             if (user == null){
                 attributes.addFlashAttribute("error", "头像更新失败!");
-                return "redirect:/currentUser/config";
+                return "redirect:/userinfo/currentUser/config";
 
             }
             String fileurl = uploadUtil.upload(request, "upload", user.getUserId()+"");
@@ -145,13 +177,13 @@ public class UserController {
         } catch (Exception e){
             attributes.addFlashAttribute("error", "头像更新失败!,exception:"+e.getMessage());
         }
-        return "redirect:/currentUser/config";
+        return "redirect:/userinfo/currentUser/config";
     }
 
     /**
      * 获取用户头像
      */
-    @RequestMapping(value = "userinfo/{userid}/head")
+    @RequestMapping(value = "userinfo/currentUser/head")
     public void head(HttpSession session, HttpServletRequest request, HttpServletResponse response){
         ServletOutputStream outputStream = null;
         FileInputStream inputStream = null;

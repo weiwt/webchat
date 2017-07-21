@@ -26,7 +26,7 @@
             </div>
             <!-- 接收者 -->
             <div class="" style="float: left">
-                <p class="am-kai">发送给 : <span id="sendto">全体成员</span><button class="am-btn am-btn-xs am-btn-danger" onclick="$('#sendto').text('全体成员')">复位</button></p>
+                <p class="am-kai">发送给 : <span id="sendtoName">全体成员</span><input type="hidden" id="sendto"/><button class="am-btn am-btn-xs am-btn-danger" onclick="resetButton()">复位</button></p>
             </div>
             <!-- 按钮区 -->
             <div class="am-btn-group am-btn-group-xs" style="float:right;">
@@ -178,7 +178,7 @@
             return;
         }
         var message = $("#message").val();
-        var to = $("#sendto").text() == "全体成员"? "": $("#sendto").text();
+        var to = $("#sendto").val() == "全体成员"? "": $("#sendto").val();
         if(message == null || message == ""){
             layer.msg("请不要惜字如金!", { offset: 0, shift: 6 });
             return;
@@ -187,7 +187,7 @@
         ws.send(JSON.stringify({
             message : {
                 content : message,
-                from : '${userid}',
+                from : '${user.userId}',
                 to : to,      //接收人,如果没有则置空,如果有多个接收人则用,分隔
                 time : getDateFull()
             },
@@ -233,8 +233,8 @@
      * 展示会话信息
      */
     function showChat(message){
-        var to = message.to == null || message.to == ""? "全体成员" : message.to;   //获取接收人
-        var isSef = '${userid}' == message.from ? "am-comment-flip" : "";   //如果是自己则显示在右边,他人信息显示在左边
+        var to = message.to == null || message.to == ""? "全体成员" : message.to;   //获取接收  人
+        var isSef = '${user.userId}' == message.from ? "am-comment-flip" : "";   //如果是自己则显示在右边,他人信息显示在左边
         var html = "<li class=\"am-comment "+isSef+" am-comment-primary\"><a href=\"#link-to-user-home\"><img width=\"48\" height=\"48\" class=\"am-comment-avatar\" alt=\"\" src=\"${ctx}/"+message.from+"/head\"></a><div class=\"am-comment-main\">\n" +
                 "<header class=\"am-comment-hd\"><div class=\"am-comment-meta\">   <a class=\"am-comment-author\" href=\"#link-to-user\">"+message.from+"</a> 发表于<time> "+message.time+"</time> 发送给: "+to+" </div></header><div class=\"am-comment-bd\"> <p>"+message.content+"</p></div></div></li>";
         $("#chat").append(html);
@@ -249,9 +249,10 @@
     function showOnline(list){
         $("#list").html("");    //清空在线列表
         $.each(list, function(index, item){     //添加私聊按钮
-            var li = "<li>"+item+"</li>";
-            if('${userid}' != item){    //排除自己
-                li = "<li>"+item+" <button type=\"button\" class=\"am-btn am-btn-xs am-btn-primary am-round\" onclick=\"addChat('"+item+"');\"><span class=\"am-icon-phone\"><span> 私聊</button></li>";
+            var li = "<li>"+item.userName+"</li>";
+            <%--alert('${user.userId}');--%>
+            if('${user.userId}' != item.userId){    //排除自己
+                li = "<li>"+item.userName+" <button type=\"button\" class=\"am-btn am-btn-xs am-btn-primary am-round\" onclick=\"addChat('"+item.userId+ "','" +  item.userName+"');\"><span class=\"am-icon-phone\"><span> 私聊</button></li>";
             }
             $("#list").append(li);
         });
@@ -267,11 +268,11 @@
         $.getJSON("http://www.tuling123.com/openapi/api?key=6ad8b4d96861f17d68270216c880d5e3&info=" + message,function(data){
             if(data.code == 100000){
                 html = "<li class=\"am-comment am-comment-primary\"><a href=\"#link-to-user-home\"><img width=\"48\" height=\"48\" class=\"am-comment-avatar\" alt=\"\" src=\"${ctx}/static/img/robot.jpg\"></a><div class=\"am-comment-main\">\n" +
-                        "<header class=\"am-comment-hd\"><div class=\"am-comment-meta\">   <a class=\"am-comment-author\" href=\"#link-to-user\">Robot</a> 发表于<time> "+getDateFull()+"</time> 发送给: ${userid}</div></header><div class=\"am-comment-bd\"> <p>"+data.text+"</p></div></div></li>";
+                        "<header class=\"am-comment-hd\"><div class=\"am-comment-meta\">   <a class=\"am-comment-author\" href=\"#link-to-user\">Robot</a> 发表于<time> "+getDateFull()+"</time> 发送给: ${user.userName}</div></header><div class=\"am-comment-bd\"> <p>"+data.text+"</p></div></div></li>";
             }
             if(data.code == 200000){
                 html = "<li class=\"am-comment am-comment-primary\"><a href=\"#link-to-user-home\"><img width=\"48\" height=\"48\" class=\"am-comment-avatar\" alt=\"\" src=\"${ctx}/static/img/robot.jpg\"></a><div class=\"am-comment-main\">\n" +
-                        "<header class=\"am-comment-hd\"><div class=\"am-comment-meta\">   <a class=\"am-comment-author\" href=\"#link-to-user\">Robot</a> 发表于<time> "+getDateFull()+"</time> 发送给: ${userid}</div></header><div class=\"am-comment-bd\"> <p>"+data.text+"</p><a href=\""+data.url+"\" target=\"_blank\">"+data.url+"</a></div></div></li>";
+                        "<header class=\"am-comment-hd\"><div class=\"am-comment-meta\">   <a class=\"am-comment-author\" href=\"#link-to-user\">Robot</a> 发表于<time> "+getDateFull()+"</time> 发送给: ${user.userName}</div></header><div class=\"am-comment-bd\"> <p>"+data.text+"</p><a href=\""+data.url+"\" target=\"_blank\">"+data.url+"</a></div></div></li>";
             }
             $("#chat").append(html);
             var chat = $("#chat-view");
@@ -283,11 +284,13 @@
     /**
      * 添加接收人
      */
-    function addChat(user){
+    function addChat(userId,userName){
         var sendto = $("#sendto");
-        var receive = sendto.text() == "全体成员" ? "" : sendto.text() + ",";
-        if(receive.indexOf(user) == -1){    //排除重复
-            sendto.text(receive + user);
+        var sendtoName = $("#sendtoName");
+        var receive = sendto.val() == "全体成员" ? "" :"";
+        if(receive.indexOf(userId) == -1){    //排除重复
+            sendto.val(receive + userId);
+            sendtoName.text(userName);
         }
     }
 
@@ -304,6 +307,11 @@
         var date = new Date();
         var currentdate = date.getFullYear() + "-" + appendZero(date.getMonth() + 1) + "-" + appendZero(date.getDate()) + " " + appendZero(date.getHours()) + ":" + appendZero(date.getMinutes()) + ":" + appendZero(date.getSeconds());
         return currentdate;
+    }
+    function resetButton(){
+        alert("haha");
+        $('#sendtoName').text('全体成员');
+        $('#sendto').val('全体成员');
     }
 </script>
 </body>

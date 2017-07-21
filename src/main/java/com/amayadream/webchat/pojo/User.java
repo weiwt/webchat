@@ -13,7 +13,7 @@ import lombok.Builder;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class User implements Comparable<User> {
 
 
 	/**
@@ -87,4 +87,8 @@ public class User {
 	 */
 	private Integer level;
 
+	@Override
+	public int compareTo(User o) {
+		return this.userId - o.userId;
+	}
 }
