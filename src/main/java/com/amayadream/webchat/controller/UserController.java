@@ -88,13 +88,14 @@ public class UserController {
      * @param user
      * @return
      */
-    @RequestMapping(value = "userinfo/add")
-    public String  add(User user,Integer groupId, RedirectAttributes attributes, HttpServletRequest request){
-        ResultDTO resultDTO = userService.addUser(user, groupId);
+    @RequestMapping(value = "userinfo/add",method = RequestMethod.POST)
+    public String  add(User user,String groupId, RedirectAttributes attributes, HttpServletRequest request){
+        Integer id = Integer.parseInt(groupId);
+        ResultDTO resultDTO = userService.addUser(user, id);
 
         if (resultDTO.isUnSuccess()){
             attributes.addFlashAttribute("error", "["+user.getUserName()+"]添加失败,errorMsg:"+resultDTO.getErrorMsg());
-            return "redirect:/userinfo/add";
+            return "redirect:/userinfo/currentUser/config";
         }
 
         attributes.addFlashAttribute("message", "["+user.getUserName()+"]资料更新成功!");
@@ -107,7 +108,7 @@ public class UserController {
 
         if (resultDTO.isUnSuccess()){
             attributes.addFlashAttribute("error", "["+group.getGroupName()+"]添加失败,errorMsg:"+resultDTO.getErrorMsg());
-            return "redirect:/userinfo/add";
+            return "redirect:/userinfo/currentUser/config";
         }
 
         attributes.addFlashAttribute("message", "["+group.getGroupName()+"]资料更新成功!");

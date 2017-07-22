@@ -94,7 +94,7 @@
                           enctype="multipart/form-data" method="post" onsubmit="return checkFileType();"
                           style="text-align: center;">
                         <div style="text-align: center;margin-bottom: 10px">
-                            <img class="am-circle" src="${ctx}/${user.avatarUrl}" width="140" height="140"
+                            <img class="am-circle" src="${ctx}/userinfo/currentUser/head" width="140" height="140"
                                  alt="Amayadream"/>
                         </div>
                         <div class="am-form-group am-form-file">
@@ -200,7 +200,7 @@
                         <div class="am-form-group">
                             <label for="sex" class="am-u-sm-2 am-form-label">用户所在组</label>
                             <div class="am-u-sm-10">
-                                <select id="groupId" name="group" data-am-selected>
+                                <select id="groupId" name="groupId" data-am-selected>
                                 </select>
                             </div>
                         </div>
@@ -250,7 +250,7 @@
                     var html = $('#groupId').html();
                     html += '<option value="' + '' + '">' + '' + '</option>';
                     for (var i = 0; i < rst.length; i++) {
-                        html += '<option value="' + rst[i].grouppId + '">' + rst[i].groupName + '</option>';
+                        html += '<option value="' + rst[i].groupId + '">' + rst[i].groupName + '</option>';
                     }
                     $('#groupId').empty().append(html);
                 }

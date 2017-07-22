@@ -19,6 +19,6 @@ public interface GroupDAO {
     int insertGroup(@Param("group") Group group);
 
     @Insert({"insert into ow_group_member (userId,groupId) VALUES(#{entity.userId},#{entity.groupId})"})
-    @Options(useCache = false,keyProperty = "entity.id")
+    @Options(useGeneratedKeys = true,keyProperty = "entity.id")
     int insertGroupMember(@Param("entity")GroupMember groupMember);
 }

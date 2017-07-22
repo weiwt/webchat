@@ -29,7 +29,7 @@
                             ${user.nickName}
                         </div>
                         <div class="am-u-md-6" style="float: right">
-                            <img class="am-circle" src="${user.avatarUrl}" width="140" height="140" alt="${user.nickName}"/>
+                            <img class="am-circle" src="${ctx}/userinfo/currentUser/head" width="140" height="140" alt="${user.nickName}"/>
                         </div>
 
                         <div class="am-u-md-3"><b>性别:</b></div>
